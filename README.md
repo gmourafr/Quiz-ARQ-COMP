@@ -37,12 +37,6 @@ O projeto foi criado como atividade acadêmica para auxiliar na revisão dos pri
 
 ---
 
-## 🎨 Canva do projeto
-
-🔗 https://canva.link/1rqdsdgv0b9upi4
-
----
-
 ## 💻 Como executar
 
 ```bash
