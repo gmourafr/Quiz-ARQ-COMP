@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Arquitetura de Computadores</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body onload="onloadEsconder()">
+
+<h1>Quiz — Arquitetura de Computadores</h1>
+
+<button id="btnIniciarQuiz" onclick="iniciarQuiz()">Iniciar Quiz</button>
+
+<div id="pontuacao">
+    <span>Acertos: <span id="spanCertas">0</span></span> &nbsp;&nbsp;
+    <span>Erros: <span id="spanErradas">0</span></span>
+    <div style="margin-top:6px">Pontuação final: <span id="spanPontuacaoFinal">—</span></div>
+    <div id="msgFinal"></div>
+</div>
+
+<div id="jogo">
+    <div id="infoQuestao">
+        Questão <span id="spanNumeroDaQuestaoAtual"></span> de <span id="qtdQuestoes"></span>
+    </div>
+
+    <span id="spanQuestaoExibida"></span>
+
+    <div id="opcoes">
+        <label class="option" id="labelOpcaoUm"><input type="radio" id="primeiraOpcao" name="option" value="alternativaA" style="margin-right:8px"></label>
+        <label class="option" id="labelOpcaoDois"><input type="radio" id="segundaOpcao" name="option" value="alternativaB" style="margin-right:8px"></label>
+        <label class="option" id="labelOpcaoTres"><input type="radio" id="terceiraOpcao" name="option" value="alternativaC" style="margin-right:8px"></label>
+        <label class="option" id="labelOpcaoQuatro"><input type="radio" id="quartaOpcao" name="option" value="alternativaD" style="margin-right:8px"></label>
+    </div>
+
+    <div id="botoes">
+        <button onclick="submeter()" id="btnSubmeter">Submeter resposta</button>
+        <button onclick="avancar()" id="btnProx" disabled>Próxima questão</button>
+        <button onclick="tentarNovamente()" id="btnTentarNovamente" disabled>Tentar novamente</button>
+    </div>
+</div>
+
+<script>
+    const listaDeQuestoes = [
+        {
+            pergunta: "Qual é a sigla utilizada para representar a 'mente' do computador?",
+            alternativaA: "GPU", alternativaB: "CPU", alternativaC: "RAM", alternativaD: "ULA",
+            alternativaCorreta: "alternativaB"
+        },
+        {
+            pergunta: "Qual é a sigla que representa a unidade responsável por realizar operações de cálculo dentro de um processador?",
+            alternativaA: "CPU", alternativaB: "DMA", alternativaC: "ULA", alternativaD: "ROM",
+            alternativaCorreta: "alternativaC"
+        },
+        {
+            pergunta: "O tipo de memória mais rápido e de menor tamanho em um sistema computacional são os:",
+            alternativaA: "Registradores", alternativaB: "Cache L1", alternativaC: "Memória RAM", alternativaD: "Memória Flash",
+            alternativaCorreta: "alternativaA"
+        },
+        {
+            pergunta: "Quais são os 5 tipos de memória com funções de curto prazo, apenas leitura, para pendrives e grandes volumes?",
+            alternativaA: "Cache, ROM, Flash, HD, SSD",
+            alternativaB: "RAM, ROM, EPROM, Flash, Memória de massa",
+            alternativaC: "RAM, ROM, HD, SSD, Registrador",
+            alternativaD: "DRAM, SRAM, Flash, ROM, Cache",
+            alternativaCorreta: "alternativaB"
+        },
+        {
+            pergunta: "Qual é a sigla do recurso que permite a transferência direta de dados entre dispositivos e a memória, sem passar constantemente pela CPU?",
+            alternativaA: "PCI", alternativaB: "USB", alternativaC: "PCIE", alternativaD: "DMA",
+            alternativaCorreta: "alternativaD"
+        },
+        {
+            pergunta: "Qual é a sigla do sinal utilizado para selecionar e ativar um chip específico em um circuito eletrônico?",
+            alternativaA: "CS (Chip Select)", alternativaB: "CLK (Clock)", alternativaC: "CE (Chip Enable)", alternativaD: "WR (Write)",
+            alternativaCorreta: "alternativaA"
+        },
+        {
+            pergunta: "A CPU possui barramentos. Um identifica onde o dado deve ser lido/gravado, o outro transporta os dados. Quais são seus nomes?",
+            alternativaA: "Data Bus e Control Bus", alternativaB: "Control Bus e Address Bus",
+            alternativaC: "Address Bus e Data Bus", alternativaD: "System Bus e I/O Bus",
+            alternativaCorreta: "alternativaC"
+        },
+        {
+            pergunta: "Qual linha Intel é custo-benefício intermediário e qual linha oferece mais desempenho e threads para tarefas pesadas?",
+            alternativaA: "I3 e I5", alternativaB: "I5 e I7", alternativaC: "I7 e I9", alternativaD: "Core e Xeon",
+            alternativaCorreta: "alternativaB"
+        },
+        {
+            pergunta: "Como é chamado o processador com dois núcleos? E o com quatro núcleos?",
+            alternativaA: "Single Core e Dual Core", alternativaB: "Dual Core e Quad Core",
+            alternativaC: "Bi-Core e Tetra-Core", alternativaD: "Double Core e Four Core",
+            alternativaCorreta: "alternativaB"
+        }
+    ];
+
+    let numeroDaQuestaoAtual = 0
+    let pontuacaoFinal = 0
+    let tentativaIncorreta = 0
+    let certas = 0
+    let erradas = 0
+    let quantidadeDeQuestoes = listaDeQuestoes.length
+
+    function onloadEsconder() {
+        document.getElementById('pontuacao').style.display = "none"
+        document.getElementById('jogo').style.display = "none"
+    }
+
+    function iniciarQuiz() {
+        document.getElementById('pontuacao').style.display = "block"
+        document.getElementById('jogo').style.display = "block"
+        document.getElementById('btnIniciarQuiz').style.display = "none"
+        document.getElementById('qtdQuestoes').innerHTML = quantidadeDeQuestoes
+        preencherHTMLcomQuestaoAtual(0)
+        btnSubmeter.disabled = false
+        btnProx.disabled = true
+        btnTentarNovamente.disabled = true
+    }
+
+    function preencherHTMLcomQuestaoAtual(index) {
+        habilitarAlternativas(true)
+        const questaoAtual = listaDeQuestoes[index]
+        numeroDaQuestaoAtual = index
+        document.getElementById("spanNumeroDaQuestaoAtual").innerHTML = Number(index) + 1
+
+        document.getElementById("spanQuestaoExibida").innerHTML = questaoAtual.pergunta
+
+        // escreve texto nas labels (após o input)
+        setLabelTexto("labelOpcaoUm",    questaoAtual.alternativaA)
+        setLabelTexto("labelOpcaoDois",  questaoAtual.alternativaB)
+        setLabelTexto("labelOpcaoTres",  questaoAtual.alternativaC)
+        setLabelTexto("labelOpcaoQuatro",questaoAtual.alternativaD)
+    }
+
+    function setLabelTexto(labelId, texto) {
+        const label = document.getElementById(labelId)
+        // mantém o input e troca só o texto
+        const input = label.querySelector('input')
+        label.innerHTML = ''
+        label.appendChild(input)
+        label.appendChild(document.createTextNode(' ' + texto))
+    }
+
+    function submeter() {
+        const options = document.getElementsByName("option")
+        let hasChecked = false
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].checked) { hasChecked = true; break }
+        }
+        if (!hasChecked) {
+            alert("Não há alternativas escolhidas. Escolha uma opção.")
+        } else {
+            btnSubmeter.disabled = true
+            btnProx.disabled = false
+            habilitarAlternativas(false)
+            checarResposta()
+        }
+    }
+
+    function habilitarAlternativas(trueOrFalse) {
+        let opcaoEscolhida = trueOrFalse ? false : true
+        primeiraOpcao.disabled = opcaoEscolhida
+        segundaOpcao.disabled = opcaoEscolhida
+        terceiraOpcao.disabled = opcaoEscolhida
+        quartaOpcao.disabled = opcaoEscolhida
+    }
+
+    function avancar() {
+        btnProx.disabled = true
+        btnSubmeter.disabled = false
+        desmarcarRadioButtons()
+
+        if (numeroDaQuestaoAtual < quantidadeDeQuestoes - 1) {
+            preencherHTMLcomQuestaoAtual(numeroDaQuestaoAtual)
+        } else if (numeroDaQuestaoAtual == quantidadeDeQuestoes - 1) {
+            alert("Atenção... a próxima é a ultima questão!")
+            preencherHTMLcomQuestaoAtual(numeroDaQuestaoAtual)
+        } else {
+            finalizarJogo()
+        }
+        limparCoresBackgroundOpcoes()
+    }
+
+    function tentarNovamente() { window.location.reload() }
+
+    function checarResposta() {
+        const questaoAtual = listaDeQuestoes[numeroDaQuestaoAtual]
+        const respostaQuestaoAtual = questaoAtual.alternativaCorreta
+        const options = document.getElementsByName("option")
+        let alternativaCorreta = null
+
+        options.forEach((option) => {
+            if (option.value === respostaQuestaoAtual) {
+                alternativaCorreta = option.parentElement.id
+            }
+        })
+
+        options.forEach((option) => {
+            if (option.checked === true && option.value === respostaQuestaoAtual) {
+                document.getElementById(alternativaCorreta).classList.add("certa")
+                pontuacaoFinal++
+                certas++
+                document.getElementById("spanCertas").innerHTML = certas
+                numeroDaQuestaoAtual++
+            } else if (option.checked && option.value !== respostaQuestaoAtual) {
+                const wrongLabelId = option.parentElement.id
+                document.getElementById(wrongLabelId).classList.add("errada")
+                document.getElementById(alternativaCorreta).classList.add("certa")
+                tentativaIncorreta++
+                erradas++
+                document.getElementById("spanErradas").innerHTML = erradas
+                numeroDaQuestaoAtual++
+            }
+        })
+    }
+
+    function limparCoresBackgroundOpcoes() {
+        const options = document.getElementsByName("option")
+        options.forEach((option) => {
+            document.getElementById(option.parentElement.id).classList.remove("errada")
+            document.getElementById(option.parentElement.id).classList.remove("certa")
+        })
+    }
+
+    function desmarcarRadioButtons() {
+        const options = document.getElementsByName("option")
+        for (let i = 0; i < options.length; i++) {
+            options[i].checked = false
+        }
+    }
+
+    function finalizarJogo() {
+        const porcentagemFinalDeAcertos = pontuacaoFinal / quantidadeDeQuestoes
+        let textoParaMensagemFinal = null
+        let classComCoresParaMensagemFinal = null
+
+        if (porcentagemFinalDeAcertos <= 0.3) {
+            textoParaMensagemFinal = "Precisa estudar mais! Tente novamente."
+            classComCoresParaMensagemFinal = "errada"
+        } else if (porcentagemFinalDeAcertos > 0.3 && porcentagemFinalDeAcertos < 0.9) {
+            textoParaMensagemFinal = "Quase lá! Revise o conteúdo e tente de novo."
+            classComCoresParaMensagemFinal = "aviso"
+        } else if (porcentagemFinalDeAcertos >= 0.9) {
+            textoParaMensagemFinal = "Excelente! Você domina o assunto!"
+            classComCoresParaMensagemFinal = "certa"
+        }
+
+        textoParaMensagemFinal += "<br> Você acertou " + Math.round((porcentagemFinalDeAcertos)*100) + "% das questões."
+
+        document.getElementById('msgFinal').innerHTML = textoParaMensagemFinal
+        document.getElementById('msgFinal').classList.add(classComCoresParaMensagemFinal)
+        document.getElementById('spanPontuacaoFinal').innerHTML = pontuacaoFinal + " / " + quantidadeDeQuestoes
+
+        document.getElementById('jogo').style.opacity = "0.5"
+        btnProx.disabled = true
+        btnSubmeter.disabled = true
+        btnTentarNovamente.disabled = false
+    }
+</script>
+</body>
+</html>
